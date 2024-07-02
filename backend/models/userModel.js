@@ -19,8 +19,25 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: [true, "Please add a password"],
     minLength: [6, 'Password must be up to 6 character'],
-    maxLength: [23, "Password must not be more than 23 characters"]
+    maxLength: [23, "Password must not be more than 23 characters"],
+  },
+  photo: {
+    type: String,
+    required: false,
+    default: "https://asset.cloudinary.com/dlpz9g0qh/ab3f82652d86c6f7a6ef30b537e1fd7a"
+  },
+  phone: {
+    type: String,
+    default: "+61"
+  },
+  bio: {
+    type: String,
+    maxLength: [230, "Password must not be more than 23 characters"],
+    default: "bio"
   }
+
+}, {
+  timestamps: true
 })
 
 const User = mongoose.model("User", UserSchema)
