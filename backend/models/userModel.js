@@ -35,7 +35,6 @@ const UserSchema = mongoose.Schema({
     maxLength: [230, "Password must not be more than 23 characters"],
     default: "bio"
   }
-
 }, {
   timestamps: true
 })
@@ -48,7 +47,7 @@ UserSchema.pre("save", async function(next){
   }
   //hash password
   const salt = await bcrypt.genSalt(10);
-  const hashedPassword =  bcrypt.hash(this.password, salt);
+  const hashedPassword = await bcrypt.hash(this.password, salt);
   this.password = hashedPassword;
   next();
 })
