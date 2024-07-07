@@ -192,6 +192,12 @@ const forgotPassword = asyncHandler(async(req, res) => {
     res.status(404)
     throw new Error("User does not exist")
   }
+  //delete existing token 
+  let token = await Token.findOne({userId: user._id})
+  if(token){
+    await token.deleteOne()
+  }
+
   let resetToken = crypto.randomBytes(32).toString("hex") + user._id
 
   //hash token before saving to db
@@ -230,6 +236,11 @@ const forgotPassword = asyncHandler(async(req, res) => {
   res.send("Forgot password email")
 })
 
+//Reset Password
+const resetPassword = asyncHandler(async(req, res) => {
+  res.send("reset password")
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -239,4 +250,5 @@ module.exports = {
   updateUser,
   changePassword,
   forgotPassword,
+  resetPassword,
 }
