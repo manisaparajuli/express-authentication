@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const Token = require("../models/tokenModel")
 const crypto = require("crypto")
+const sendEmail = require("../utils/sendEmail")
 const generateToken = (id) => {
   return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "1d"})
 };
@@ -192,10 +193,40 @@ const forgotPassword = asyncHandler(async(req, res) => {
     throw new Error("User does not exist")
   }
   let resetToken = crypto.randomBytes(32).toString("hex") + user._id
+
   //hash token before saving to db
   const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex")
-
   
+  //saving token to db
+  await new Token({
+    userId: user._id,
+    token : hashedToken,
+    createdAt:  Date.now(),
+    expireAt:  Date.now() + 30 * 60000, 
+  }).save()
+
+  //construct reset URL 
+  const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`
+
+  //reset email
+  const message = `
+    <h2>Hello ${user.name}</h2>
+    <p>Please use the following url to reset your password</p>
+    <p>This url is valid for only 30 minutes</p>
+    <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+    <p>Regards</p>
+    <p> Manisha ptv. ltd.</p>
+  `
+  const subject = "Password reset request"
+  const send_to = user.email
+  const send_from = process.env.EMAIL_USER
+  try{
+    await sendEmail(subject, message,send_to, send_from)
+    res.status(200).json({success: true, message: "reset email sent"})
+  }catch(err){
+    res.status(500)
+    throw new Error("Email not sent please try again ")
+  }
   res.send("Forgot password email")
 })
 
