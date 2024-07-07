@@ -199,7 +199,7 @@ const forgotPassword = asyncHandler(async(req, res) => {
   }
 
   let resetToken = crypto.randomBytes(32).toString("hex") + user._id
-
+  console.log(resetToken)
   //hash token before saving to db
   const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex")
   
@@ -213,7 +213,7 @@ const forgotPassword = asyncHandler(async(req, res) => {
 
   //construct reset URL 
   const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`
-
+  console.log(resetToken)
   //reset email
   const message = `
     <h2>Hello ${user.name}</h2>
@@ -238,7 +238,26 @@ const forgotPassword = asyncHandler(async(req, res) => {
 
 //Reset Password
 const resetPassword = asyncHandler(async(req, res) => {
-  res.send("reset password")
+  const {password} = req.body
+  const {resetToken } = req.params
+
+  
+  const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex")
+
+  const userToken = await Token.findOne({
+    token: hashedToken,
+    expireAt: {$gt: Date.now()}
+  })
+  
+  if(!userToken ){
+    res.status(404)
+    throw new Error("Invalid or expired token")
+  }
+  const user = await User.findOne({_id: userToken.userId})
+
+  user.password = password
+  await user.save()
+  res.status(200).json({message: "password reset successfully, Please login"})
 })
 
 module.exports = {
